@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.api.user.constants.Constant;
 import com.api.user.dto.UserRQ;
 import com.api.user.dto.UserRS;
 import com.api.user.exception.BusinessException;
@@ -36,7 +37,7 @@ public class LoginController {
             return new ResponseEntity<>(response, HttpStatus.OK);
         }
 
-        throw new BusinessException("USER NOT FOUND");
+        throw new BusinessException(Constant.USER_NOT_FOUND);
 
     }
 
