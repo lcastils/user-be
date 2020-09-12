@@ -22,7 +22,7 @@ public class UserRS {
 
     private LocalDateTime lastLogin;
 
-    private boolean isActive;
+    private Boolean isActive;
 
     private List<Phone> phones;
 

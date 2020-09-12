@@ -14,11 +14,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.api.user.constants.Constant;
 import com.api.user.dto.MessageDTO;
 import com.api.user.dto.UserRQ;
 import com.api.user.dto.UserRS;
 import com.api.user.exception.BusinessException;
-import com.api.user.security.JwtUtil;
+import com.api.user.security.JwtUtilComponent;
 import com.api.user.service.UserService;
 import com.api.user.utils.ValidateUtil;
 
@@ -41,7 +42,7 @@ public class UserServiceImpl implements UserService {
     private String dalUserCreate;
     
     @Autowired
-    private JwtUtil jwtutil;
+    private JwtUtilComponent jwtutil;
 
     @Override
     public UserRS createUser(UserRQ user) {
@@ -102,7 +103,7 @@ public class UserServiceImpl implements UserService {
     public UserRS updateUser(UserRQ user) {
         UserRS userRS = getUserByEmail(user.getEmail());
         if(Objects.isNull(userRS)) {
-            throw new BusinessException("Usuario no registrado");
+            throw new BusinessException(Constant.USER_NOT_FOUND);
         }
         LocalDateTime dateNow = LocalDateTime.now();
         validatePassWord(user.getPassword());
@@ -127,7 +128,7 @@ public class UserServiceImpl implements UserService {
     public MessageDTO deleteUser(UserRQ user) {
         UserRS userRS = getUserByEmail(user.getEmail());
         if(Objects.isNull(userRS)) {
-            throw new BusinessException("Usuario no registrado");
+            throw new BusinessException(Constant.USER_NOT_FOUND);
         }
         LocalDateTime dateNow = LocalDateTime.now();
         validatePassWord(user.getPassword());
