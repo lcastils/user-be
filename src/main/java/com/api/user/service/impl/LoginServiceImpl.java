@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.api.user.constants.Constant;
 import com.api.user.dto.UserRQ;
 import com.api.user.dto.UserRS;
 import com.api.user.exception.BusinessException;
@@ -66,7 +67,7 @@ public class LoginServiceImpl implements LoginService {
 			}
 		}
 
-		return null;
+		 throw new BusinessException(Constant.USER_NOT_FOUND);
 	}
 
 	private void validateEmail(String email) {

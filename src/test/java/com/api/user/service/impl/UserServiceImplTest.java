@@ -76,6 +76,10 @@ public class UserServiceImplTest {
 		userRs.setName(objRq.getName());
 		userRs.setPhones(listPhones);
 		Mockito.when(jwtutil.getJWTToken(Mockito.anyString())).thenReturn(TEST_TOKEN);
+		
+		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
+				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
+				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
 	}
 
 	@Test(expected = BusinessException.class)
@@ -98,9 +102,6 @@ public class UserServiceImplTest {
 
 	@Test(expected = BusinessException.class)
 	public void createUserWithEmailUsed() {
-		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
-				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
-				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
 		userService.createUser(objRq);
 	}
 
@@ -128,9 +129,6 @@ public class UserServiceImplTest {
 	@Test
 	public void updateUserOK() {
 		userRs.setLastLogin(LocalDateTime.now());
-		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
-				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
-				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
 		userRs.getPhones().stream().filter(filterCityCode()).forEach(p -> p.setCitycode(13L));
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.PUT),
 				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
@@ -145,9 +143,6 @@ public class UserServiceImplTest {
 	
 	@Test
 	public void updateUserFail() {
-		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
-				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
-				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.PUT),
 				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
 				.thenReturn(new ResponseEntity<>(HttpStatus.BAD_GATEWAY));
@@ -167,9 +162,6 @@ public class UserServiceImplTest {
 	@Test
 	public void deleteUserOK() {
 		userRs.setLastLogin(LocalDateTime.now());
-		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
-				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
-				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.DELETE),
 				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
 				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
@@ -179,14 +171,12 @@ public class UserServiceImplTest {
 	
 	@Test
 	public void deleteUserFail() {
-		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
-				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
-				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.DELETE),
 				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
 				.thenReturn(new ResponseEntity<>(HttpStatus.BAD_GATEWAY));
 		MessageDTO messageDelete = userService.deleteUser(objRq);
 		assertNull("something went grong : ", messageDelete);
 	}
+
 
 }
