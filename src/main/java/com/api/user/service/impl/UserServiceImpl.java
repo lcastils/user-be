@@ -47,7 +47,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserRS createUser(UserRQ user) {
 
-        validateEmail(user.getEmail());
         UserRS userRS = getUserByEmail(user.getEmail());
         if (Objects.nonNull(userRS)) {
             throw new BusinessException("Email esta en uso");
