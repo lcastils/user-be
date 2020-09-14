@@ -18,7 +18,7 @@ public final class ValidateUtil {
     }
 
     public static final boolean isValidPassword(final String password) {
-        Pattern pattern = Pattern.compile(Constant.REGEX_EMAIL);
+        Pattern pattern = Pattern.compile(Constant.REGEX_PASSWORD);
         Matcher matcher = pattern.matcher(password);
         return matcher.matches();
     }
