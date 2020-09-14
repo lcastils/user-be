@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
@@ -76,7 +77,7 @@ public class UserServiceImplTest {
 		userRs.setName(objRq.getName());
 		userRs.setPhones(listPhones);
 		Mockito.when(jwtutil.getJWTToken(Mockito.anyString())).thenReturn(TEST_TOKEN);
-		
+
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
 				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
 				.thenReturn(new ResponseEntity<>(userRs, HttpStatus.OK));
@@ -85,6 +86,15 @@ public class UserServiceImplTest {
 	@Test(expected = BusinessException.class)
 	public void createUserInvalidEmail() {
 		objRq.setEmail("luasda.asa@ascas@.com");
+		userService.createUser(objRq);
+	}
+
+	@Test(expected = BusinessException.class)
+	public void createUserInvalidPassword() {
+		objRq.setPassword("123asdasdA");
+		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
+				ArgumentMatchers.any(), ArgumentMatchers.eq(UserRS.class)))
+				.thenReturn(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 		userService.createUser(objRq);
 	}
 
@@ -140,7 +150,7 @@ public class UserServiceImplTest {
 	private Predicate<? super Phone> filterCityCode() {
 		return x -> x.getCitycode().equals(12L);
 	}
-	
+
 	@Test
 	public void updateUserFail() {
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.PUT),
@@ -149,7 +159,7 @@ public class UserServiceImplTest {
 		UserRS userUpdated = userService.updateUser(objRq);
 		assertNull("something went grong : ", userUpdated);
 	}
-	
+
 	@Test(expected = BusinessException.class)
 	public void deleteUserFailUserNotFound() {
 		objRq.setEmail("juanZapata123@ribera.cl");
@@ -158,7 +168,7 @@ public class UserServiceImplTest {
 				.thenReturn(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
 		userService.deleteUser(objRq);
 	}
-	
+
 	@Test
 	public void deleteUserOK() {
 		userRs.setLastLogin(LocalDateTime.now());
@@ -168,7 +178,7 @@ public class UserServiceImplTest {
 		MessageDTO messageDelete = userService.deleteUser(objRq);
 		assertNotNull("user delete ok  : ", messageDelete);
 	}
-	
+
 	@Test
 	public void deleteUserFail() {
 		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.DELETE),
@@ -178,5 +188,22 @@ public class UserServiceImplTest {
 		assertNull("something went grong : ", messageDelete);
 	}
 
+	@Test
+	public void findAllUserOK() {
+		List<UserRS> listResponse = new ArrayList<UserRS>();
+		listResponse.add(userRs);
+		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
+				ArgumentMatchers.any(), ArgumentMatchers.eq(new ParameterizedTypeReference<List<UserRS>>() {
+				}))).thenReturn(new ResponseEntity<>(listResponse, HttpStatus.OK));
+		assertNotNull("find all users ok", userService.findAllUsers());
+	}
+
+	@Test(expected = BusinessException.class)
+	public void findAllUserEmpty() {
+		Mockito.when(restTemplate.exchange(ArgumentMatchers.any(), ArgumentMatchers.eq(HttpMethod.GET),
+				ArgumentMatchers.any(), ArgumentMatchers.eq(new ParameterizedTypeReference<List<UserRS>>() {
+				}))).thenReturn(new ResponseEntity<>( HttpStatus.NOT_FOUND));
+		 userService.findAllUsers();
+	}
 
 }

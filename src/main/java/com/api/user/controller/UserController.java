@@ -1,5 +1,6 @@
 package com.api.user.controller;
 
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,6 +28,17 @@ public class UserController {
 
 	@Autowired
 	private UserService userService;
+	
+	@GetMapping(value = "/users/findall", produces = MediaType.APPLICATION_JSON_VALUE)
+	@ApiOperation(value = "Metodo encargado de devolver los usuarios registrados activos ")
+	public ResponseEntity<List<UserRS>> findAllUsers() {
+		log.info("find all  user ");
+		List<UserRS> objResponse = userService.findAllUsers();
+		if (!objResponse.isEmpty()) {
+			return new ResponseEntity<>(objResponse, HttpStatus.OK);
+		}
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	}
 
 	@PostMapping(value = "/users/create", produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Metodo encargado de crear un usuario ")
@@ -47,7 +60,7 @@ public class UserController {
 		if (Objects.nonNull(objResponse)) {
 			return new ResponseEntity<>(objResponse, HttpStatus.OK);
 		}
-		return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
 	@DeleteMapping(value = "/users/delete", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -61,7 +74,7 @@ public class UserController {
 			return new ResponseEntity<>(objResponse, HttpStatus.OK);
 		}
 
-		return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	}
 
 }

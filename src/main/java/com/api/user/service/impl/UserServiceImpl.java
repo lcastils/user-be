@@ -1,10 +1,12 @@
 package com.api.user.service.impl;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -29,123 +31,141 @@ import lombok.extern.log4j.Log4j2;
 @Service
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private RestTemplate restTemplate;
+	@Autowired
+	private RestTemplate restTemplate;
 
-    @Value("${dal.url}")
-    private String dalUrl;
+	@Value("${dal.url}")
+	private String dalUrl;
 
-    @Value("${dal.user.find-by.email}")
-    private String findByEmail;
+	@Value("${dal.user.find-by.email}")
+	private String findByEmail;
 
-    @Value("${dal.user.create}")
-    private String dalUserCreate;
-    
-    @Autowired
-    private JwtUtilComponent jwtutil;
+	@Value("${dal.user.find.all}")
+	private String findAll;
+	
+	@Value("${dal.user.create}")
+	private String dalUserCreate;
 
-    @Override
-    public UserRS createUser(UserRQ user) {
+	@Autowired
+	private JwtUtilComponent jwtutil;
 
-        UserRS userRS = getUserByEmail(user.getEmail());
-        if (Objects.nonNull(userRS)) {
-            throw new BusinessException("Email esta en uso");
-        }
+	@Override
+	public UserRS createUser(UserRQ user) {
 
-        validatePassWord(user.getPassword());
-       
+		UserRS userRS = getUserByEmail(user.getEmail());
+		if (Objects.nonNull(userRS)) {
+			throw new BusinessException("Email esta en uso");
+		}
 
-        user.setToken(jwtutil.getJWTToken(user.getName()));
-        user.setCreationDate(LocalDateTime.now());
-        user.setIsActive(Boolean.TRUE);
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(dalUserCreate).build();
-        HttpEntity<UserRQ> entity = new HttpEntity<>(user);
-        ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, entity,
-                UserRS.class);
-        if(HttpStatus.OK.equals(response.getStatusCode())){
-            return response.getBody();
-        }
-        
-        return null;
+		validatePassWord(user.getPassword());
 
-    }
+		user.setToken(jwtutil.getJWTToken(user.getName()));
+		user.setCreationDate(LocalDateTime.now());
+		user.setIsActive(Boolean.TRUE);
+		UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(dalUserCreate).build();
+		HttpEntity<UserRQ> entity = new HttpEntity<>(user);
+		ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.POST, entity,
+				UserRS.class);
+		if (HttpStatus.OK.equals(response.getStatusCode())) {
+			return response.getBody();
+		}
 
-    private void validatePassWord(String password) {
-         log.info("pendiente validacion password"+ password);
-        //TODO validate password 
-    }
+		return null;
 
-    private void validateEmail(String  email) {
-        if (!ValidateUtil.isValidEmail(email)) {
-            throw new BusinessException("Invalid email");
-        }
-    }
+	}
 
-    @Override
-    public UserRS getUserByEmail(final String email) {
-        validateEmail(email);
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(findByEmail).buildAndExpand(email);
-        ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, null,
-                UserRS.class);
-        if (HttpStatus.OK.equals(response.getStatusCode())) {
-            UserRS userRS = response.getBody();
-            if(Objects.isNull(userRS.getLastLogin())) {
-                userRS.setLastLogin(userRS.getCreationDate());
-            }
-            return userRS;
-        }
+	private void validatePassWord(String password) {
+		if (!ValidateUtil.isValidPassword(password)) {
+			log.info("invalid password!");
+			throw new BusinessException("Invalid password");
+		}
+	}
 
-        return null;
-    }
+	private void validateEmail(String email) {
+		if (!ValidateUtil.isValidEmail(email)) {
+			throw new BusinessException("Invalid email");
+		}
+	}
 
-    @Override
-    public UserRS updateUser(UserRQ user) {
-        UserRS userRS = getUserByEmail(user.getEmail());
-        if(Objects.isNull(userRS)) {
-            throw new BusinessException(Constant.USER_NOT_FOUND);
-        }
-        LocalDateTime dateNow = LocalDateTime.now();
-        validatePassWord(user.getPassword());
-        
-        user.setId(userRS.getId());
-        user.setCreationDate(userRS.getCreationDate());
-        user.setToken(jwtutil.getJWTToken(user.getName()));
-        user.setIsActive(Boolean.TRUE);
-        user.setUpdateDate(dateNow);
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(dalUserCreate).build();
-        HttpEntity<UserRQ> entity = new HttpEntity<>(user);
-        ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.PUT, entity,
-                UserRS.class);
-        if(HttpStatus.OK.equals(response.getStatusCode())){
-            return response.getBody();
-        }
-        
-        return null;
-    }
+	@Override
+	public UserRS getUserByEmail(final String email) {
+		validateEmail(email);
+		UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(findByEmail).buildAndExpand(email);
+		ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, null,
+				UserRS.class);
+		if (HttpStatus.OK.equals(response.getStatusCode())) {
+			UserRS userRS = response.getBody();
+			if (Objects.isNull(userRS.getLastLogin())) {
+				userRS.setLastLogin(userRS.getCreationDate());
+			}
+			return userRS;
+		}
 
-    @Override
-    public MessageDTO deleteUser(UserRQ user) {
-        UserRS userRS = getUserByEmail(user.getEmail());
-        if(Objects.isNull(userRS)) {
-            throw new BusinessException(Constant.USER_NOT_FOUND);
-        }
-        LocalDateTime dateNow = LocalDateTime.now();
-        validatePassWord(user.getPassword());
-        
-        user.setId(userRS.getId());
-        user.setCreationDate(userRS.getCreationDate());
-        user.setIsActive(Boolean.FALSE);
-        user.setUpdateDate(dateNow);
-        user.setToken(userRS.getToken());
-        UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(dalUserCreate).build();
-        HttpEntity<UserRQ> entity = new HttpEntity<>(user);
-        ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.DELETE, entity,
-                UserRS.class);
-        if(HttpStatus.OK.equals(response.getStatusCode())){
-            return new MessageDTO("Usuario eliminado exitosamente");
-        }
-        
-        return null;
-    }
+		return null;
+	}
+
+	@Override
+	public UserRS updateUser(UserRQ user) {
+		log.info("in updateUser");
+		UserRS userRS = getUserByEmail(user.getEmail());
+		if (Objects.isNull(userRS)) {
+			throw new BusinessException(Constant.USER_NOT_FOUND);
+		}
+		LocalDateTime dateNow = LocalDateTime.now();
+		validatePassWord(user.getPassword());
+
+		user.setId(userRS.getId());
+		user.setCreationDate(userRS.getCreationDate());
+		user.setToken(jwtutil.getJWTToken(user.getName()));
+		user.setIsActive(Boolean.TRUE);
+		user.setUpdateDate(dateNow);
+		UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(dalUserCreate).build();
+		HttpEntity<UserRQ> entity = new HttpEntity<>(user);
+		ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.PUT, entity,
+				UserRS.class);
+		if (HttpStatus.OK.equals(response.getStatusCode())) {
+			return response.getBody();
+		}
+
+		return null;
+	}
+
+	@Override
+	public MessageDTO deleteUser(UserRQ user) {
+		UserRS userRS = getUserByEmail(user.getEmail());
+		if (Objects.isNull(userRS)) {
+			throw new BusinessException(Constant.USER_NOT_FOUND);
+		}
+		LocalDateTime dateNow = LocalDateTime.now();
+		validatePassWord(user.getPassword());
+
+		user.setId(userRS.getId());
+		user.setCreationDate(userRS.getCreationDate());
+		user.setIsActive(Boolean.FALSE);
+		user.setUpdateDate(dateNow);
+		user.setToken(userRS.getToken());
+		UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(dalUserCreate).build();
+		HttpEntity<UserRQ> entity = new HttpEntity<>(user);
+		ResponseEntity<UserRS> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.DELETE, entity,
+				UserRS.class);
+		if (HttpStatus.OK.equals(response.getStatusCode())) {
+			return new MessageDTO("Usuario eliminado exitosamente");
+		}
+
+		return null;
+	}
+
+	@Override
+	public List<UserRS> findAllUsers() {
+		UriComponents uriComponents = UriComponentsBuilder.fromHttpUrl(dalUrl).path(findAll).build();
+		ResponseEntity<List<UserRS>> response = restTemplate.exchange(uriComponents.toUri(), HttpMethod.GET, null,
+				new ParameterizedTypeReference<List<UserRS>>() {
+				});
+		if (HttpStatus.OK.equals(response.getStatusCode())) {
+			return response.getBody();
+		}
+		throw new BusinessException(Constant.NO_DATA_FOUND);
+
+	}
 
 }
