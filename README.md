@@ -9,6 +9,7 @@
 * http://localhost:8080/users/create endpoint para delete, protegido por jwt
 * http://localhost:8080/users/delete endpoint para delete, protegido por jwt
 * http://localhost:8080/users/update endpoint para update, protegido por jwt
+* http://localhost:8080/users/findall endpoint para listar todos los usuarios activos, protegido por jwt
 
 
  
